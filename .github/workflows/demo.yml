@@ -17,8 +17,9 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
-      # Diff the example fixtures (a deliberate regression) and show the verdict.
-      - name: comparator dry-run on fixtures
+      # The fixtures contain a DELIBERATE regression. This step shows the rendered
+      # verdict and asserts the gate caught it — so green CI means "the gate works".
+      - name: comparator catches the planted regression
         run: |
           node --import tsx -e '
             import { compare, renderMarkdown } from "./src/compare.ts";
@@ -28,5 +29,7 @@ jobs:
             const specs = yaml.load(readFileSync("examples/metrics.yml","utf8")).metrics;
             const r = compare(j("examples/baseline.json"), j("examples/results.json"), specs);
             console.log(renderMarkdown(r));
-            process.exit(r.verdict === "regressed" ? 1 : 0);
+            const ok = r.verdict === "regressed" && r.regressions === 2;
+            console.log(ok ? "\n✓ gate correctly caught the planted regression" : "\n✗ gate MISSED it");
+            process.exit(ok ? 0 : 1);
           '
