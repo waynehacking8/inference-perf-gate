@@ -1,0 +1,6 @@
+{
+  "tokens_per_sec": 27700,
+  "pct_of_cublas": 106.0,
+  "decode_p99_ms": 9.8,
+  "allreduce_busbw_gbs": 366.0
+}

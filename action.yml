@@ -1,0 +1,44 @@
+name: 'inference-perf-gate'
+description: 'Gate PRs on GPU-kernel / LLM-serving performance regressions against a committed baseline'
+author: 'Wayne Chiu'
+
+inputs:
+  results_path:
+    description: 'Path to the measured metrics file the benchmark wrote (flat metric->number JSON)'
+    required: true
+    default: 'results.json'
+  baseline_path:
+    description: 'Path to the committed baseline to diff against'
+    required: true
+    default: 'baseline.json'
+  metrics_path:
+    description: 'Per-metric direction + tolerance (YAML). Unlisted metrics are reported but never gate.'
+    required: false
+    default: ''
+  benchmark_command:
+    description: 'Optional command to run before diffing (must write results_path). Skip to diff an existing file.'
+    required: false
+    default: ''
+  fail_on_regression:
+    description: 'Hard-fail the check (merge block) when any specced metric regresses beyond tolerance'
+    required: false
+    default: 'true'
+  github_token:
+    description: 'Token for posting the PR comment + check status'
+    required: true
+
+outputs:
+  regressions_count:
+    description: 'Number of specced metrics that regressed beyond tolerance'
+  verdict:
+    description: 'pass | regressed'
+  report_markdown:
+    description: 'The rendered comparison table'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'trending-up'
+  color: 'green'

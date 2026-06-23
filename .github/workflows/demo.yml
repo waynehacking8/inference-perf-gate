@@ -1,0 +1,32 @@
+# Public CPU demo: there is no GPU on GitHub-hosted runners, so this proves the
+# comparator/verdict logic against committed fixtures — not a real kernel run.
+# The real gate runs on a self-hosted GPU runner (see README).
+name: demo
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  comparator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      # Diff the example fixtures (a deliberate regression) and show the verdict.
+      - name: comparator dry-run on fixtures
+        run: |
+          node --import tsx -e '
+            import { compare, renderMarkdown } from "./src/compare.ts";
+            import { readFileSync } from "node:fs";
+            import yaml from "js-yaml";
+            const j = (p) => JSON.parse(readFileSync(p, "utf8"));
+            const specs = yaml.load(readFileSync("examples/metrics.yml","utf8")).metrics;
+            const r = compare(j("examples/baseline.json"), j("examples/results.json"), specs);
+            console.log(renderMarkdown(r));
+            process.exit(r.verdict === "regressed" ? 1 : 0);
+          '
